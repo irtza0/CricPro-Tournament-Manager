@@ -197,3 +197,6 @@ npm test
 - **Input Validation**: express-validator on all inputs
 - **CORS**: Configured origin whitelist
 - **Helmet**: Security headers
+
+## Project Management
+Jira: https://yahyasworkspace-41560610.atlassian.net/jira/software/projects/CTM/summary
