@@ -9,8 +9,8 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const { tournament_id, status, team_id } = req.query;
-    let sql = `SELECT m.*, t1.name AS team1_name, t1.short_name AS team1_short,
-               t2.name AS team2_name, t2.short_name AS team2_short,
+    let sql = `SELECT m.*, t1.name AS team1_name, t1.short_name AS team1_short, t1.logo_url AS team1_logo,
+               t2.name AS team2_name, t2.short_name AS team2_short, t2.logo_url AS team2_logo,
                w.name AS winner_name, tn.name AS tournament_name
                FROM matches m
                JOIN teams t1 ON m.team1_id = t1.id JOIN teams t2 ON m.team2_id = t2.id

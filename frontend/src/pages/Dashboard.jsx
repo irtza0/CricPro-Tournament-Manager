@@ -3,12 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { statsAPI } from '../services/api';
 
-const TEAM_LOGOS = {
-  'Royal Challengers': '/images/team-rch.png',
-  'Super Kings': '/images/team-sk.png',
-  'Thunder Strikers': '/images/team-ts.png',
-  'Storm Warriors': '/images/team-sw.png',
-};
+
 
 function StatIcon({ type }) {
   const icons = {
@@ -93,9 +88,9 @@ export default function Dashboard() {
                 <div className="flex items-center gap-5 flex-1">
                   <div className="flex items-center gap-3">
                     <div className="team-logo w-10 h-10">
-                      {TEAM_LOGOS[match.team1_name] ?
-                        <img src={TEAM_LOGOS[match.team1_name]} alt={match.team1_name} /> :
-                        <span className="text-sm font-bold text-primary-400">{match.team1_name?.[0]}</span>}
+                      {match.team1_logo ?
+                        <img src={match.team1_logo} alt={match.team1_name} className="w-full h-full object-contain" /> :
+                        <span className="text-sm font-bold text-primary-400">{match.team1_short || match.team1_name?.[0]}</span>}
                     </div>
                     <p className="font-semibold text-white text-sm">{match.team1_name}</p>
                   </div>
@@ -103,9 +98,9 @@ export default function Dashboard() {
                   <div className="flex items-center gap-3">
                     <p className="font-semibold text-white text-sm">{match.team2_name}</p>
                     <div className="team-logo w-10 h-10">
-                      {TEAM_LOGOS[match.team2_name] ?
-                        <img src={TEAM_LOGOS[match.team2_name]} alt={match.team2_name} /> :
-                        <span className="text-sm font-bold text-primary-400">{match.team2_name?.[0]}</span>}
+                      {match.team2_logo ?
+                        <img src={match.team2_logo} alt={match.team2_name} className="w-full h-full object-contain" /> :
+                        <span className="text-sm font-bold text-primary-400">{match.team2_short || match.team2_name?.[0]}</span>}
                     </div>
                   </div>
                 </div>

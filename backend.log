@@ -1,0 +1,9 @@
+🏏 Cricket Tournament API running on port 5001
+[0mPOST /api/auth/login [32m200[0m 120.239 ms - 499[0m
+[0mPOST /api/players [32m201[0m 6.395 ms - 348[0m
+[0mGET /api/stats/dashboard [32m200[0m 34.771 ms - 2301[0m
+[0mGET /api/stats/dashboard [36m304[0m 2.866 ms - -[0m
+[0mGET /api/players?team_id=&role=&search= [32m200[0m 4.260 ms - 27224[0m
+[0mGET /api/teams [36m304[0m 4.489 ms - -[0m
+[0mGET /api/players?team_id=&role=&search= [36m304[0m 2.608 ms - -[0m
+[0mGET /api/teams [36m304[0m 2.881 ms - -[0m

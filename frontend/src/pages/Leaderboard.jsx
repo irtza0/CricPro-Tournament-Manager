@@ -86,7 +86,11 @@ export default function Leaderboard() {
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="player-avatar w-9 h-9 text-xs font-bold text-white">{p.player_name?.split(' ').map(n=>n[0]).join('')}</div>
+                      {p.avatar_url ? (
+                        <img src={p.avatar_url} alt={p.player_name} className="w-9 h-9 rounded-full object-cover border border-surface-700/50 bg-surface-800" />
+                      ) : (
+                        <div className="player-avatar w-9 h-9 text-xs font-bold text-white">{p.player_name?.split(' ').map(n=>n[0]).join('')}</div>
+                      )}
                       <span className="font-semibold text-white">{p.player_name}</span>
                     </div>
                   </td>
@@ -127,7 +131,11 @@ export default function Leaderboard() {
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-3">
-                      <div className="player-avatar w-9 h-9 text-xs font-bold text-white">{p.player_name?.split(' ').map(n=>n[0]).join('')}</div>
+                      {p.avatar_url ? (
+                        <img src={p.avatar_url} alt={p.player_name} className="w-9 h-9 rounded-full object-cover border border-surface-700/50 bg-surface-800" />
+                      ) : (
+                        <div className="player-avatar w-9 h-9 text-xs font-bold text-white">{p.player_name?.split(' ').map(n=>n[0]).join('')}</div>
+                      )}
                       <span className="font-semibold text-white">{p.player_name}</span>
                     </div>
                   </td>

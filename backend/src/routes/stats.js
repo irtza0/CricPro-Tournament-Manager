@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/top-scorers', async (req, res) => {
   try {
     const { tournament_id, limit = 10 } = req.query;
-    let sql = `SELECT p.id, p.first_name || ' ' || p.last_name AS player_name,
+    let sql = `SELECT p.id, p.first_name || ' ' || p.last_name AS player_name, p.avatar_url,
                t.name AS team_name, t.short_name, p.role AS player_role,
                COUNT(bs.id) AS innings, SUM(bs.runs_scored) AS total_runs,
                SUM(bs.balls_faced) AS total_balls, SUM(bs.fours) AS total_fours,
@@ -21,7 +21,7 @@ router.get('/top-scorers', async (req, res) => {
       params.push(tournament_id);
       sql += ` JOIN matches m ON bs.match_id = m.id WHERE m.tournament_id = $1`;
     }
-    sql += ` GROUP BY p.id, p.first_name, p.last_name, t.name, t.short_name, p.role
+    sql += ` GROUP BY p.id, p.first_name, p.last_name, p.avatar_url, t.name, t.short_name, p.role
              ORDER BY total_runs DESC LIMIT $${params.length + 1}`;
     params.push(parseInt(limit));
     const result = await query(sql, params);
@@ -35,7 +35,7 @@ router.get('/top-scorers', async (req, res) => {
 router.get('/top-wicket-takers', async (req, res) => {
   try {
     const { tournament_id, limit = 10 } = req.query;
-    let sql = `SELECT p.id, p.first_name || ' ' || p.last_name AS player_name,
+    let sql = `SELECT p.id, p.first_name || ' ' || p.last_name AS player_name, p.avatar_url,
                t.name AS team_name, t.short_name,
                COUNT(bw.id) AS innings, SUM(bw.wickets) AS total_wickets,
                SUM(bw.overs_bowled) AS total_overs, SUM(bw.runs_conceded) AS runs_conceded,
@@ -48,7 +48,7 @@ router.get('/top-wicket-takers', async (req, res) => {
       params.push(tournament_id);
       sql += ` JOIN matches m ON bw.match_id = m.id WHERE m.tournament_id = $1`;
     }
-    sql += ` GROUP BY p.id, p.first_name, p.last_name, t.name, t.short_name
+    sql += ` GROUP BY p.id, p.first_name, p.last_name, p.avatar_url, t.name, t.short_name
              ORDER BY total_wickets DESC LIMIT $${params.length + 1}`;
     params.push(parseInt(limit));
     const result = await query(sql, params);
@@ -110,7 +110,9 @@ router.get('/dashboard', async (req, res) => {
       query('SELECT COUNT(*) AS count FROM matches'),
     ]);
     const recentMatches = await query(`
-      SELECT m.*, t1.name AS team1_name, t2.name AS team2_name, w.name AS winner_name
+      SELECT m.*, t1.name AS team1_name, t1.short_name AS team1_short, t1.logo_url AS team1_logo,
+             t2.name AS team2_name, t2.short_name AS team2_short, t2.logo_url AS team2_logo,
+             w.name AS winner_name
       FROM matches m JOIN teams t1 ON m.team1_id=t1.id JOIN teams t2 ON m.team2_id=t2.id
       LEFT JOIN teams w ON m.winner_id=w.id
       ORDER BY m.match_date DESC LIMIT 5`);

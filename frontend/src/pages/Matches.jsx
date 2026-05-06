@@ -4,19 +4,16 @@ import { useAuth } from '../context/AuthContext';
 import { matchesAPI, tournamentsAPI, teamsAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
-const TEAM_LOGOS = {
-  'Royal Challengers': '/images/team-rch.png', 'Super Kings': '/images/team-sk.png',
-  'Thunder Strikers': '/images/team-ts.png', 'Storm Warriors': '/images/team-sw.png',
-};
 
-function TeamBadge({ name }) {
+function TeamBadge({ name, logo }) {
   return (
     <div className="team-logo w-10 h-10">
-      {TEAM_LOGOS[name] ? <img src={TEAM_LOGOS[name]} alt={name} /> :
+      {logo ? <img src={logo} alt={name} className="w-full h-full object-contain" /> :
         <span className="text-sm font-bold text-primary-400">{name?.[0]}</span>}
     </div>
   );
 }
+
 
 export default function Matches() {
   const [matches, setMatches] = useState([]);
@@ -82,11 +79,11 @@ export default function Matches() {
               <div className="flex items-center gap-5 flex-1">
                 <div className="flex items-center gap-3 min-w-[140px] justify-end">
                   <p className="font-semibold text-white text-right">{m.team1_name}</p>
-                  <TeamBadge name={m.team1_name} />
+                  <TeamBadge name={m.team1_name} logo={m.team1_logo} />
                 </div>
                 <span className="vs-badge">VS</span>
                 <div className="flex items-center gap-3 min-w-[140px]">
-                  <TeamBadge name={m.team2_name} />
+                  <TeamBadge name={m.team2_name} logo={m.team2_logo} />
                   <p className="font-semibold text-white">{m.team2_name}</p>
                 </div>
               </div>

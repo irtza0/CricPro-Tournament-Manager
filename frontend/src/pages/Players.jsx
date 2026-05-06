@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { playersAPI, teamsAPI } from '../services/api';
 import toast from 'react-hot-toast';
@@ -9,21 +9,97 @@ export default function Players() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [filter, setFilter] = useState({ team_id: '', role: '', search: '' });
-  const [form, setForm] = useState({ first_name: '', last_name: '', role: 'batsman', batting_style: 'right_hand', bowling_style: 'none', team_id: '', nationality: '', jersey_number: '' });
+  const [form, setForm] = useState({ first_name: '', last_name: '', role: 'batsman', batting_style: 'right_hand', bowling_style: 'none', team_id: '', nationality: '', jersey_number: '', avatar_url: '' });
+  const [editingId, setEditingId] = useState(null);
+  // FIX: track image preview separately from avatar_url
+  const [imagePreview, setImagePreview] = useState('');
+  const fileInputRef = useRef(null);
   const { isAdmin, isManager } = useAuth();
 
-  const fetchPlayers = () => playersAPI.getAll(filter).then(r => setPlayers(r.data)).catch(() => {}).finally(() => setLoading(false));
+  const fetchPlayers = () => playersAPI.getAll(filter)
+    .then(r => setPlayers(r.data))
+    .catch(err => toast.error('Failed to load players'))  // FIX: show error instead of silently swallowing
+    .finally(() => setLoading(false));
+
   useEffect(() => { fetchPlayers(); }, [filter]);
   useEffect(() => { teamsAPI.getAll().then(r => setTeams(r.data)).catch(() => {}); }, []);
 
-  const handleCreate = async (e) => {
+  // FIX: Handle image file selection — convert to base64 data URL
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+      setForm(prev => ({ ...prev, avatar_url: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await playersAPI.create(form);
-      toast.success('Player added!');
+      const dataToSubmit = { ...form };
+      if (dataToSubmit.team_id === '') dataToSubmit.team_id = null;
+      if (dataToSubmit.jersey_number === '') dataToSubmit.jersey_number = null;
+      if (dataToSubmit.avatar_url === '') dataToSubmit.avatar_url = null;
+      if (dataToSubmit.nationality === '') dataToSubmit.nationality = null;
+
+      if (editingId) {
+        await playersAPI.update(editingId, dataToSubmit);
+        toast.success('Player updated!');
+      } else {
+        await playersAPI.create(dataToSubmit);
+        toast.success('Player added!');
+      }
       setShowModal(false);
+      setImagePreview('');
       fetchPlayers();
-    } catch (err) { toast.error('Failed to add player'); }
+    } catch (err) {
+      // FIX: show the actual error message from the server if available
+      const msg = err?.response?.data?.error || err?.response?.data?.errors?.[0]?.msg || `Failed to ${editingId ? 'update' : 'add'} player`;
+      toast.error(msg);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this player?')) return;
+    try {
+      await playersAPI.delete(id);
+      toast.success('Player deleted');
+      fetchPlayers();
+    } catch (err) { toast.error('Failed to delete player'); }
+  };
+
+  // FIX: open modal helper with image preview reset
+  const openEditModal = (p) => {
+    setForm({
+      first_name: p.first_name || '',
+      last_name: p.last_name || '',
+      role: p.role || 'batsman',
+      batting_style: p.batting_style || 'right_hand',
+      bowling_style: p.bowling_style || 'none',
+      team_id: p.team_id || '',
+      nationality: p.nationality || '',
+      jersey_number: p.jersey_number || '',
+      avatar_url: p.avatar_url || ''
+    });
+    setImagePreview(p.avatar_url || '');
+    setEditingId(p.id);
+    setShowModal(true);
+  };
+
+  const openAddModal = () => {
+    setForm({ first_name: '', last_name: '', role: 'batsman', batting_style: 'right_hand', bowling_style: 'none', team_id: '', nationality: '', jersey_number: '', avatar_url: '' });
+    setImagePreview('');
+    setEditingId(null);
+    setShowModal(true);
   };
 
   const roleColors = {
@@ -46,7 +122,7 @@ export default function Players() {
           <p className="page-subtitle ml-5">{players.length} players found</p>
         </div>
         {(isAdmin || isManager) && (
-          <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
+          <button onClick={openAddModal} className="btn-primary flex items-center gap-2">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Add Player
           </button>
@@ -76,11 +152,32 @@ export default function Players() {
       {/* Player Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {players.map((p, i) => (
-          <div key={p.id} className="glass-card p-5 animate-slide-up group hover:border-surface-600/50 transition-all duration-300" style={{ animationDelay: `${i * 0.03}s` }}>
+          <div key={p.id} className="glass-card p-5 animate-slide-up group hover:border-surface-600/50 transition-all duration-300 relative" style={{ animationDelay: `${i * 0.03}s` }}>
+            {/* FIX: Removed opacity-0 — buttons are now always visible, not just on hover */}
+            <div className="absolute top-2 right-2 flex gap-1">
+              {(isAdmin || isManager) && (
+                <>
+                  <button
+                    onClick={() => openEditModal(p)}
+                    className="p-1.5 bg-surface-800 hover:bg-primary-500/20 text-surface-400 hover:text-primary-400 rounded transition-colors"
+                    title="Edit"
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button onClick={() => handleDelete(p.id)} className="p-1.5 bg-surface-800 hover:bg-red-500/20 text-surface-400 hover:text-red-400 rounded transition-colors" title="Delete">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </>
+              )}
+            </div>
             <div className="flex items-center gap-3 mb-3">
-              <div className="player-avatar text-white font-bold text-sm">
-                {p.first_name[0]}{p.last_name[0]}
-              </div>
+              {p.avatar_url ? (
+                <img src={p.avatar_url} alt={`${p.first_name} ${p.last_name}`} className="w-12 h-12 rounded-full object-cover border-2 border-surface-700/50 flex-shrink-0 bg-surface-800" />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500/30 to-accent-500/30 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  {p.first_name[0]}{p.last_name[0]}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-white truncate">{p.first_name} {p.last_name}</h3>
                 <p className="text-xs text-surface-500 truncate">
@@ -105,12 +202,12 @@ export default function Players() {
         </div>
       )}
 
-      {/* Create Modal */}
+      {/* Add/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowModal(false)}>
           <div className="glass-card p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto animate-scale-in" onClick={e => e.stopPropagation()}>
-            <h2 className="section-title mb-6">Add New Player</h2>
-            <form onSubmit={handleCreate} className="space-y-4">
+            <h2 className="section-title mb-6">{editingId ? 'Edit Player' : 'Add New Player'}</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <input placeholder="First Name" value={form.first_name} onChange={e => setForm({...form, first_name: e.target.value})} className="input-field" required />
                 <input placeholder="Last Name" value={form.last_name} onChange={e => setForm({...form, last_name: e.target.value})} className="input-field" required />
@@ -121,25 +218,88 @@ export default function Players() {
               </select>
               <div className="grid grid-cols-2 gap-4">
                 <select value={form.role} onChange={e => setForm({...form, role: e.target.value})} className="select-field">
-                  <option value="batsman">Batsman</option><option value="bowler">Bowler</option>
-                  <option value="all_rounder">All Rounder</option><option value="wicket_keeper">Wicket Keeper</option>
+                  <option value="batsman">Batsman</option>
+                  <option value="bowler">Bowler</option>
+                  <option value="all_rounder">All Rounder</option>
+                  <option value="wicket_keeper">Wicket Keeper</option>
                 </select>
                 <select value={form.batting_style} onChange={e => setForm({...form, batting_style: e.target.value})} className="select-field">
-                  <option value="right_hand">Right Hand</option><option value="left_hand">Left Hand</option>
+                  <option value="right_hand">Right Hand</option>
+                  <option value="left_hand">Left Hand</option>
                 </select>
               </div>
+              {/* FIX: Added missing right_arm_medium and left_arm_medium options */}
               <select value={form.bowling_style} onChange={e => setForm({...form, bowling_style: e.target.value})} className="select-field">
-                <option value="none">None</option><option value="right_arm_fast">Right Arm Fast</option>
-                <option value="left_arm_fast">Left Arm Fast</option><option value="right_arm_spin">Right Arm Spin</option>
+                <option value="none">None</option>
+                <option value="right_arm_fast">Right Arm Fast</option>
+                <option value="left_arm_fast">Left Arm Fast</option>
+                <option value="right_arm_medium">Right Arm Medium</option>
+                <option value="left_arm_medium">Left Arm Medium</option>
+                <option value="right_arm_spin">Right Arm Spin</option>
                 <option value="left_arm_spin">Left Arm Spin</option>
               </select>
               <div className="grid grid-cols-2 gap-4">
                 <input placeholder="Nationality" value={form.nationality} onChange={e => setForm({...form, nationality: e.target.value})} className="input-field" />
                 <input placeholder="Jersey #" type="number" value={form.jersey_number} onChange={e => setForm({...form, jersey_number: e.target.value})} className="input-field" />
               </div>
+
+              {/* FIX: Image upload section — replaces plain URL text field */}
+              <div className="space-y-2">
+                <label className="text-sm text-surface-400">Player Photo</label>
+                <div className="flex items-center gap-3">
+                  {/* Preview */}
+                  <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-surface-700 bg-surface-800 flex-shrink-0 flex items-center justify-center">
+                    {imagePreview ? (
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <svg className="w-6 h-6 text-surface-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    {/* File upload button */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="btn-secondary w-full text-sm py-1.5"
+                    >
+                      {imagePreview ? 'Change Photo' : 'Upload Photo'}
+                    </button>
+                    {/* URL fallback */}
+                    <input
+                      placeholder="Or paste image URL"
+                      value={form.avatar_url && !form.avatar_url.startsWith('data:') ? form.avatar_url : ''}
+                      onChange={e => {
+                        setForm({...form, avatar_url: e.target.value});
+                        setImagePreview(e.target.value);
+                      }}
+                      className="input-field text-sm"
+                    />
+                  </div>
+                </div>
+                {imagePreview && (
+                  <button
+                    type="button"
+                    onClick={() => { setImagePreview(''); setForm(prev => ({...prev, avatar_url: ''})); }}
+                    className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    Remove photo
+                  </button>
+                )}
+              </div>
+
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary flex-1">Cancel</button>
-                <button type="submit" className="btn-primary flex-1">Add Player</button>
+                <button type="button" onClick={() => { setShowModal(false); setImagePreview(''); }} className="btn-secondary flex-1">Cancel</button>
+                <button type="submit" className="btn-primary flex-1">{editingId ? 'Save Changes' : 'Add Player'}</button>
               </div>
             </form>
           </div>
