@@ -1,0 +1,179 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { @apply transition-colors duration-200; }
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-surface-950 text-gray-100 font-sans antialiased;
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(34,197,94,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(163,230,53,0.04) 0%, transparent 50%);
+    min-height: 100vh;
+  }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-surface-950; }
+  ::-webkit-scrollbar-thumb { @apply bg-surface-700 rounded-full hover:bg-surface-600; }
+  ::selection { @apply bg-primary-600/40 text-white; }
+}
+
+@layer components {
+  /* === CARDS === */
+  .glass-card {
+    @apply bg-surface-900/70 backdrop-blur-xl border border-surface-700/40 rounded-2xl;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .glass-card-hover {
+    @apply glass-card cursor-pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .glass-card-hover:hover {
+    @apply border-primary-500/30;
+    box-shadow: 0 8px 40px rgba(34,197,94,0.08), 0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+    transform: translateY(-2px);
+  }
+
+  /* === BUTTONS === */
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary-600 to-accent-600 text-surface-950 font-semibold py-2.5 px-6 rounded-xl
+    shadow-lg shadow-primary-600/20 tracking-wide;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-primary:hover {
+    @apply from-primary-500 to-accent-500 shadow-xl shadow-primary-500/30;
+    transform: translateY(-1px);
+  }
+  .btn-primary:active { transform: scale(0.98) translateY(0); }
+
+  .btn-secondary {
+    @apply bg-surface-800/80 text-gray-200 font-medium py-2.5 px-6 rounded-xl border border-surface-600/50
+    hover:bg-surface-700 hover:border-surface-500 active:scale-[0.98];
+  }
+
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-600 to-red-500 text-white font-semibold py-2.5 px-6 rounded-xl
+    hover:from-red-500 hover:to-red-400 active:scale-[0.98] shadow-lg shadow-red-500/25;
+  }
+
+  /* === INPUTS === */
+  .input-field {
+    @apply w-full bg-surface-800/60 border border-surface-600/50 rounded-xl px-4 py-3 text-gray-100
+    placeholder-surface-500 focus:outline-none focus:border-primary-500/60 focus:ring-2 focus:ring-primary-500/15;
+    transition: all 0.25s ease;
+  }
+  .select-field {
+    @apply input-field appearance-none cursor-pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+    padding-right: 2.5rem;
+  }
+
+  /* === BADGES === */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider;
+  }
+  .badge-live { @apply badge bg-red-500/15 text-red-400 border border-red-500/25; }
+  .badge-completed { @apply badge bg-primary-500/15 text-primary-400 border border-primary-500/25; }
+  .badge-upcoming { @apply badge bg-blue-500/15 text-blue-400 border border-blue-500/25; }
+  .badge-scheduled { @apply badge bg-amber-500/15 text-amber-400 border border-amber-500/25; }
+
+  /* === STATS === */
+  .stat-card {
+    @apply glass-card p-6 text-center relative overflow-hidden;
+  }
+  .stat-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-0;
+    background: linear-gradient(135deg, rgba(34,197,94,0.05) 0%, rgba(163,230,53,0.05) 100%);
+    transition: opacity 0.3s ease;
+  }
+  .stat-card:hover::before { @apply opacity-100; }
+  .stat-value {
+    @apply text-3xl font-bold font-display;
+    background: linear-gradient(135deg, #4ade80 0%, #a3e635 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-label {
+    @apply text-sm text-surface-400 mt-1 uppercase tracking-widest font-medium;
+  }
+
+  /* === TABLES === */
+  .table-header {
+    @apply bg-surface-800/60 text-surface-400 text-xs uppercase tracking-wider font-semibold;
+  }
+  .table-row {
+    @apply border-b border-surface-800/50;
+    transition: background-color 0.2s ease;
+  }
+  .table-row:hover { @apply bg-surface-800/40; }
+
+  /* === TYPOGRAPHY === */
+  .page-title {
+    @apply text-3xl md:text-4xl font-bold font-display text-white tracking-tight;
+  }
+  .page-subtitle {
+    @apply text-surface-400 mt-2 text-base;
+  }
+  .section-title {
+    @apply text-xl font-semibold font-display text-white tracking-tight;
+  }
+
+  /* === TEAM LOGO CONTAINER === */
+  .team-logo {
+    @apply w-14 h-14 rounded-xl overflow-hidden bg-surface-800/60 border border-surface-700/30
+    flex items-center justify-center;
+  }
+  .team-logo img {
+    @apply w-full h-full object-cover;
+  }
+
+  /* === PLAYER AVATAR === */
+  .player-avatar {
+    @apply w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-primary-600/20 to-accent-600/20
+    border border-primary-500/20 flex items-center justify-center;
+  }
+
+  /* === DIVIDER === */
+  .divider {
+    @apply border-t border-surface-700/40;
+  }
+
+  /* === SCROLL REVEAL === */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* === CUSTOM ANIMATIONS === */
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animated-gradient {
+  background-size: 200% 200%;
+  animation: gradientMove 4s ease infinite;
+}
+
+/* Smooth page transitions */
+.page-enter {
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* VS badge in match cards */
+.vs-badge {
+  @apply text-xs font-bold tracking-wider text-surface-500 bg-surface-800 px-4 py-1.5 rounded-full
+  border border-surface-700/30 uppercase;
+}
