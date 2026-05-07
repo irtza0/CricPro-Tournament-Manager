@@ -64,10 +64,18 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/matches
 router.post('/', authenticate, authorize('admin'), [
-  body('tournament_id').isUUID(),
-  body('team1_id').isUUID(),
-  body('team2_id').isUUID(),
-  body('match_date').isISO8601(),
+  body('tournament_id').matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+  body('team1_id').matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+  body('team2_id').matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+  body('match_date').custom((value) => {
+    // Accept both ISO8601 and datetime-local format (YYYY-MM-DDTHH:MM)
+    if (!value) throw new Error('Match date is required');
+    const isoPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d{3})?(Z|[+-]\d{2}:?\d{2})?$/;
+    if (!isoPattern.test(value)) throw new Error('Invalid date format');
+    const date = new Date(value);
+    if (isNaN(date.getTime())) throw new Error('Invalid date');
+    return true;
+  }),
   body('match_type').isIn(['group', 'quarter_final', 'semi_final', 'final', 'playoff', 'friendly']),
 ], async (req, res) => {
   try {
