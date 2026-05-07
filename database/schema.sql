@@ -1,3 +1,4 @@
+-- Author: Muhammad Zeeshan Nasim (Reg No: 2024495)
 -- ============================================================
 -- 🏏 Cricket Tournament & Statistics Manager
 -- Agent 1: Database Architect — Complete PostgreSQL Schema
