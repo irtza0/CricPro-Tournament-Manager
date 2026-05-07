@@ -1,5 +1,5 @@
 // CricPro Frontend - React App Router
-// Member: [Your Name] - Frontend Development
+// Member: Yahya Khalid - Frontend Development
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
